@@ -64,10 +64,11 @@ gulp.task('build', [
     'build-index-page',
     'build-client-scripts',
     'build-client-styles'
-], function (done) {
+], function () {
     fs.writeFileSync(targetDir + '/CNAME', 'thistlejs.org', 'utf8');
 
-    done();
+    return gulp.src('**/*', {cwd: targetDir})
+       .pipe(build.makeGitCommit());
 });
 
 gulp.task('dev-server', ['build'], function () {
