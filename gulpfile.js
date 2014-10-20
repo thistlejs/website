@@ -7,7 +7,6 @@ var sass = require('gulp-sass');
 var sourcemaps = require('gulp-sourcemaps');
 var livereload = require('gulp-livereload');
 var static = require('node-static');
-var buildBranch = require('buildbranch');
 
 var liveReloadPort = 35729;
 var targetDir = __dirname + '/target';
@@ -51,16 +50,7 @@ gulp.task('build', [
     'build-client-scripts',
     'build-client-styles'
 ], function (done) {
-    buildBranch({
-        branch: 'gh-pages',
-        folder: targetDir,
-        domain: 'thistlejs.org'
-    }, function (err) {
-        if (err) {
-            console.error(err);
-        }
-        done();
-    });
+    done();
 });
 
 gulp.task('dev-server', ['build'], function () {
