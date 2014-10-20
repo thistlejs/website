@@ -1,0 +1,61 @@
+<h1 id="thistle-a-slightly-prickly-html-template-engine-for-nodejs">thistle - a slightly-prickly HTML template engine for NodeJS</h1>
+<p>Thistle is a HTML template engine for NodeJS that, unlike many other template systems, operates on
+a DOM-like structure rather than on raw strings.</p>
+<p>DOM-based templating adds a little more overhead (which thistle attempts to minimize) but in return allows
+for more expressiveness via custom <em>directives</em> that allow for creating reusable template components and
+other reusable functionality.</p>
+<p>Thistle is inspired by (but not entirely compatible with) <a href="https://docs.angularjs.org/guide/templates">AngularJS templates</a>.
+Thistle attempts to provide much of the expressive power of AngularJS while optimizing for fast template
+rendering.</p>
+<h2 id="basic-usage">Basic Usage</h2>
+<p>Instantiate a <code>thistle</code> instance to begin:</p>
+<pre><code class="lang-js">var thistle = require(&#39;thistle&#39;);
+var compiler = thistle();
+</code></pre>
+<p>By default the compiler has the basic, built-in directives and filters loaded. Templates using just these
+features can be compiled:</p>
+<pre><code class="lang-js">var render = compiler.compile(&#39;&lt;ul&gt;\n&lt;li thi-repeat=&quot;item in items&quot;&gt;{{ item }}&lt;/li&gt;\n&lt;/ul&gt;&#39;);
+</code></pre>
+<p>The <code>compile</code> method returns a function that takes a scope and returns a rendered DOM. A scope is just a
+plain old JavaScript object whose keys become variables for the template:</p>
+<pre><code class="lang-js">var nodes = render({items:[&#39;a&#39;, &#39;b&#39;, &#39;c&#39;]});
+</code></pre>
+<p>You’ll usually want to render the resulting DOM as a string of HTML:</p>
+<pre><code class="lang-js">console.log(compiler.serializeHtml(nodes));
+</code></pre>
+<p>This basic example then results in the following output:</p>
+<pre><code class="lang-html">&lt;ul&gt;
+&lt;li&gt;a&lt;/li&gt;&lt;li&gt;b&lt;/li&gt;&lt;li&gt;c&lt;/li&gt;
+&lt;/ul&gt;
+</code></pre>
+<p>Most ‘real’ applications will compile all of the necessary templates once during startup and then render
+them many times with different data. Thus <code>thistle</code> is designed to do extra preparation work during
+compilation in order to enable faster rendering.</p>
+<h2 id="status">Status</h2>
+<p>Thistle is still under early development and thus its interface is still subject to change until a
+1.0.0 release is reached. More implementation experience is required before we can confidently commit
+to an interface.</p>
+<h2 id="license">License</h2>
+<p>Copyright (c) 2014 Martin Atkins</p>
+<p>Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the “Software”), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:</p>
+<p>The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.</p>
+<p>THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.</p>
+<h2 id="contributing">Contributing</h2>
+<p>Contributions are welcome via github pull requests. Please make sure the tests
+are passing (using <code>npm test</code>) and try to stick keep things consistent with
+the prevailing code style.</p>
+<p>If you’ve tried to use Thistle in a real-world application and have design
+feedback, please consider opening a github issue describing your application and
+your suggestions.</p>
