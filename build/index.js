@@ -26,6 +26,7 @@ function buildIndex(opts) {
 function buildPage(opts) {
     opts = opts || {};
     var isIndex = opts.isIndex;
+    var liveReloadPort = opts.liveReloadPort;
 
     var stream = through.obj(function (file, enc, cb) {
         if (file.isStream()) {
@@ -55,6 +56,12 @@ function buildPage(opts) {
                     stylesheetUrl: '/styles/main.css',
                     scriptUrl: '/scripts/index.js'
                 };
+                if (liveReloadPort) {
+                    // TODO: Dynamically insert the LiveReload script
+                    // on the client so we can use location.host rather
+                    // than hard-coding localhost in here.
+                    scope.liveReloadUrl = '//127.0.0.1:35729/livereload.js?snipver=1';
+                }
                 var pageHtml = compiler.serializeHtml(renderPage(scope));
 
                 file.contents = new Buffer(pageHtml);

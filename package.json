@@ -17,9 +17,12 @@
         "gulp-sourcemaps": "",
         "gulp-uglify": "",
         "marked": "",
+        "merge-stream": "",
         "nodegit": "",
         "node-static": "",
+        "stream-from-array": "",
         "thistle": "",
-        "through2": ""
+        "through2": "",
+        "vinyl": ""
     }
 }

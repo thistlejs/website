@@ -9,24 +9,29 @@ var livereload = require('gulp-livereload');
 var static = require('node-static');
 var build = require('./build/index.js');
 var fs = require('fs');
+var merge = require('merge-stream');
+var File = require('vinyl');
+var streamFromArray = require('stream-from-array');
 
 var liveReloadPort = 35729;
 var targetDir = __dirname + '/target';
 
-gulp.task('build-index-page', function () {
+function indexPageStream(withLiveReload) {
     return gulp.src(build.indexFileGlob)
-        .pipe(build.buildIndex())
-        .pipe(gulp.dest(targetDir));
-});
+        .pipe(build.buildIndex({
+            liveReloadPort: withLiveReload ? liveReloadPort : undefined
+        }));
+}
 
-gulp.task('build-manual-pages', function () {
+function manualPagesStream(withLiveReload) {
     return gulp.src(build.manualFileGlob)
-        .pipe(build.buildPage())
-        .pipe(gulp.dest(targetDir));
-});
+        .pipe(build.buildPage({
+            liveReloadPort: withLiveReload ? liveReloadPort : undefined
+        }));
+}
 
-gulp.task('build-client-scripts', function () {
-    return gulp.src('scripts/index.js', {cwd: 'client'})
+function clientScriptsStream() {
+    return gulp.src('client/scripts/index.js', {base: 'client'})
         .pipe(browserify({
             transforms: [brfs],
             insertGlobals: true,
@@ -41,13 +46,11 @@ gulp.task('build-client-scripts', function () {
         .pipe(sourcemaps.init({loadMaps: true}))
         .pipe(ngAnnotate())
         .pipe(uglify())
-        .pipe(sourcemaps.write('.'))
-        .pipe(gulp.dest(targetDir + '/scripts'))
-        .pipe(livereload({auto:false}));
-});
+        .pipe(sourcemaps.write('.'));
+}
 
-gulp.task('build-client-styles', function () {
-    return gulp.src('styles/*.scss', {cwd: 'client'})
+function clientStylesStream() {
+    return gulp.src('client/styles/*.scss', {base: 'client'})
         .pipe(sourcemaps.init())
         .pipe(sass({
             outputStyle: 'compressed',
@@ -55,23 +58,37 @@ gulp.task('build-client-styles', function () {
                 'node_modules/bootstrap-sass/assets/stylesheets'
             ]
         }))
-        .pipe(sourcemaps.write('.'))
-        .pipe(gulp.dest(targetDir + '/styles'))
-        .pipe(livereload({auto:false}));
-})
+        .pipe(sourcemaps.write('.'));
+}
 
-gulp.task('build', [
-    'build-index-page',
-    'build-client-scripts',
-    'build-client-styles'
-], function () {
-    fs.writeFileSync(targetDir + '/CNAME', 'thistlejs.org', 'utf8');
+function configFilesStream() {
+    var cnameFile = new File({
+        cwd: '/',
+        base: '/',
+        path: '/CNAME',
+        contents: new Buffer('thistlejs.org')
+    });
 
-    return gulp.src('**/*', {cwd: targetDir})
-       .pipe(build.makeGitCommit());
+    return streamFromArray.obj([cnameFile]);
+}
+
+function allFilesStream(withLiveReload) {
+    return merge(
+        indexPageStream(withLiveReload),
+        manualPagesStream(withLiveReload),
+        clientScriptsStream(),
+        clientStylesStream(),
+        configFilesStream()
+    );
+}
+
+gulp.task('build', function () {
+    return allFilesStream()
+        .pipe(build.makeGitCommit())
+        .pipe(gulp.dest(targetDir));
 });
 
-gulp.task('dev-server', ['build'], function () {
+gulp.task('dev-server', function () {
     var http = require('http');
     livereload.listen(liveReloadPort);
     var app = new static.Server(targetDir);
@@ -80,14 +97,32 @@ gulp.task('dev-server', ['build'], function () {
             app.serve(req, res);
         }).resume();
     }).listen(3000);
-    gulp.watch('client/scripts/index.js', ['build-client-scripts']);
-    gulp.watch('client/styles/*.scss', ['build-client-styles']);
-    gulp.watch(build.indexFileGlob, ['build-index-page']);
-    gulp.watch(build.manualFileGlob, ['build-manual-pages']);
-    gulp.watch('templates/**/*.html', [
-        'build-index-page',
-        'build-manual-pages'
-    ]);
+
+    function rebuildCb(stream) {
+        return stream
+            .pipe(gulp.dest(targetDir))
+            .pipe(livereload());
+    }
+
+    gulp.watch('client/scripts/index.js', function () {
+        return rebuildCb(clientScriptsStream());
+    });
+    gulp.watch('client/styles/*.scss', function () {
+        return rebuildCb(clientStylesStream());
+    });
+    gulp.watch(build.indexFileGlob, function () {
+        return rebuildCb(indexPageStream(true));
+    });
+    gulp.watch(build.manualFileGlob, function () {
+        return rebuildCb(manualPagesStream(true));
+    });
+    gulp.watch('templates/**/*.html', function () {
+        return rebuildCb(merge(
+            indexPageStream(true),
+            manualPagesStream(true)
+        ));
+    });
+    return allFilesStream(true).pipe(gulp.dest(targetDir));
 });
 
 gulp.task('default', ['build']);
