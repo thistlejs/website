@@ -17,6 +17,7 @@
         "gulp-uglify": "",
         "marked": "",
         "node-static": "",
-        "thistle": ""
+        "thistle": "",
+        "through2": ""
     }
 }

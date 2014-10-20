@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf8">
+<title thi-if="pageTitle">{{ pageTitle }} - Thistle</title>
+<title thi-if="! pageTitle">Thistle</title>
+<link rel="stylesheet" href="{{ stylesheetUrl }}">
+<base href="/">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+</head>
+<body thi-class="{ index: isIndex }">
+
+  <header>
+    <nav></nav>
+  </header>
+
+  <main thi-bind-html="pageContent" class="container">
+    {{ pageContent }}
+  </main>
+
+  <script src="{{ scriptUrl }}"></script>
+</body>
+</html>

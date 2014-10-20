@@ -7,9 +7,23 @@ var sass = require('gulp-sass');
 var sourcemaps = require('gulp-sourcemaps');
 var livereload = require('gulp-livereload');
 var static = require('node-static');
+var build = require('./build/index.js');
+var fs = require('fs');
 
 var liveReloadPort = 35729;
 var targetDir = __dirname + '/target';
+
+gulp.task('build-index-page', function () {
+    return gulp.src(build.indexFileGlob)
+        .pipe(build.buildIndex())
+        .pipe(gulp.dest(targetDir));
+});
+
+gulp.task('build-manual-pages', function () {
+    return gulp.src(build.manualFileGlob)
+        .pipe(build.buildPage())
+        .pipe(gulp.dest(targetDir));
+});
 
 gulp.task('build-client-scripts', function () {
     return gulp.src('scripts/index.js', {cwd: 'client'})
@@ -47,9 +61,12 @@ gulp.task('build-client-styles', function () {
 })
 
 gulp.task('build', [
+    'build-index-page',
     'build-client-scripts',
     'build-client-styles'
 ], function (done) {
+    fs.writeFileSync(targetDir + '/CNAME', 'thistlejs.org', 'utf8');
+
     done();
 });
 
@@ -64,6 +81,12 @@ gulp.task('dev-server', ['build'], function () {
     }).listen(3000);
     gulp.watch('client/scripts/index.js', ['build-client-scripts']);
     gulp.watch('client/styles/*.scss', ['build-client-styles']);
+    gulp.watch(build.indexFileGlob, ['build-index-page']);
+    gulp.watch(build.manualFileGlob, ['build-manual-pages']);
+    gulp.watch('templates/**/*.html', [
+        'build-index-page',
+        'build-manual-pages'
+    ]);
 });
 
 gulp.task('default', ['build']);
